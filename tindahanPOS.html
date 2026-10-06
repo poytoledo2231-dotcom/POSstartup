@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tindahan POS</title>
+<style>
+:root{
+  --bg:#f3f5ef; --card:#ffffff; --ink:#1c2a22; --muted:#66756b; --line:#e2e8df;
+  --brand:#1f7a4d; --brand-soft:#e1f2e8; --brand-ink:#ffffff;
+  --accent:#e8a400; --danger:#c8402f; --danger-soft:#fbe7e3; --shadow:0 1px 2px rgba(20,40,28,.06),0 4px 14px rgba(20,40,28,.06);
+  --bar:#9fd3b5; --blue:#1d4ed8; --amber:#9a6a00;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101612; --card:#19211c; --ink:#e8efe9; --muted:#93a398; --line:#27322b;
+    --brand:#3fb67a; --brand-soft:#1d3a2b; --brand-ink:#0b1710;
+    --accent:#f0b429; --danger:#ef6a58; --danger-soft:#3a1f1b; --shadow:0 1px 2px rgba(0,0,0,.4);
+    --bar:#2b6a4a; --blue:#6ea8ff; --amber:#f0b429;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101612; --card:#19211c; --ink:#e8efe9; --muted:#93a398; --line:#27322b;
+  --brand:#3fb67a; --brand-soft:#1d3a2b; --brand-ink:#0b1710;
+  --accent:#f0b429; --danger:#ef6a58; --danger-soft:#3a1f1b; --shadow:0 1px 2px rgba(0,0,0,.4);
+  --bar:#2b6a4a; --blue:#6ea8ff; --amber:#f0b429;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3{margin:0;line-height:1.2}
+.app{display:grid;grid-template-columns:230px 1fr;height:100vh;height:100dvh}
+
+/* sidebar */
+.side{background:var(--card);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
+.logo{width:38px;height:38px;border-radius:11px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:800;font-size:20px}
+.brand b{display:block;font-size:16px}
+.brand small{color:var(--muted);font-size:12px}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{display:flex;align-items:center;gap:12px;padding:13px 14px;border:0;background:none;border-radius:12px;color:var(--muted);font-weight:600;text-align:left}
+.nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav button:hover{background:var(--bg)}
+.nav button.on{background:var(--brand-soft);color:var(--brand)}
+.side .foot{margin-top:auto;color:var(--muted);font-size:12px;padding:8px}
+
+/* main */
+main{overflow:auto;padding:24px 28px 40px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.head h1{font-size:26px}
+.head p{margin:2px 0 0;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+.btn{border:1px solid var(--line);background:var(--card);padding:11px 16px;border-radius:12px;font-weight:600}
+.btn:hover{background:var(--bg)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger);border-color:var(--danger-soft)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.big{padding:16px 20px;font-size:18px;border-radius:14px}
+.btn.sm{padding:7px 11px;font-size:14px;border-radius:10px}
+.btn svg{width:18px;height:18px;vertical-align:-3px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-right:6px}
+input[type=text],input[type=number],input[type=search],select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);outline:none}
+input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:0 0 6px}
+.field{margin-bottom:14px}
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.pos{color:var(--brand)} .neg{color:var(--danger)}
+
+/* dashboard */
+.hero{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:14px;margin-bottom:16px}
+.stat small{color:var(--muted);font-weight:600;font-size:13px}
+.stat .n{font-size:28px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+.stat.main{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.stat.main small{color:inherit;opacity:.85}
+.stat.main .n{font-size:42px}
+.stat .delta{font-size:13px;margin-top:2px;font-weight:600}
+.stat.main .delta{opacity:.9}
+.cols{display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start}
+.cols h3{font-size:16px;margin-bottom:12px}
+.list-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.list-row:first-of-type{border-top:0}
+.chart svg{width:100%;height:auto;display:block}
+.chart .ax{fill:var(--muted);font-size:11px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .bar{fill:var(--bar)}
+.chart .bar.today{fill:var(--brand)}
+.chart .val{fill:var(--ink);font-size:11px;font-weight:700;text-anchor:middle}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:var(--danger-soft);color:var(--danger)}
+.pill.ok{background:var(--brand-soft);color:var(--brand)}
+
+/* cashier */
+.cashier{display:grid;grid-template-columns:1fr 370px;gap:16px;align-items:start}
+.tools{display:flex;gap:10px;margin-bottom:14px}
+.tools input{flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;align-items:start}
+.tile{position:relative;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:0;overflow:hidden;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.tile:hover{border-color:var(--brand)}
+.tile .pic{position:relative;overflow:hidden;aspect-ratio:1/1;width:100%;display:grid;place-items:center;padding:10px;text-align:center;font-weight:800;font-size:15px;color:#1c2a22;line-height:1.15;word-break:break-word}
+.tile .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;margin:0;max-width:none}
+.tile .meta{padding:8px 10px;border-top:1px solid var(--line)}
+.tile .meta b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .meta span{font-size:13px;color:var(--brand);font-weight:700}
+.tile .badge{position:absolute;top:8px;right:8px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+.cart{position:sticky;top:0;display:flex;flex-direction:column;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px)}
+.cart h3{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.lines{overflow:auto;flex:1;min-height:120px}
+.line{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid var(--line);cursor:pointer}
+.line:first-child{border-top:0}
+.line b{display:block;font-size:15px}
+.line small{color:var(--muted)}
+.line .amt{font-weight:700;white-space:nowrap}
+.empty{color:var(--muted);text-align:center;padding:36px 8px}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:12px;margin:10px 0 12px}
+.total span{color:var(--muted);font-weight:600}
+.total b{font-size:34px;letter-spacing:-.02em}
+
+/* product list */
+.plist{display:flex;flex-direction:column}
+.prow{display:grid;grid-template-columns:54px 1fr 90px 90px 90px 120px;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.prow.h{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-top:0;padding-top:0}
+.thumb{position:relative;flex:none;width:54px;height:54px;border-radius:12px;display:grid;place-items:center;overflow:hidden;font-weight:800;font-size:11px;text-align:center;color:#1c2a22;line-height:1.1;padding:3px}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;margin:0;max-width:none}
+.prow .nm b{display:block}
+.prow .nm small{color:var(--muted)}
+.acts{display:flex;gap:6px;justify-content:flex-end}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(10,20,14,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.scrim.on{display:flex}
+.modal{background:var(--card);border-radius:20px;width:100%;max-width:440px;max-height:92vh;overflow:auto;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.modal h2{font-size:21px;margin-bottom:4px}
+.modal .sub{color:var(--muted);margin-bottom:16px}
+.modal .actions{display:flex;gap:10px;margin-top:16px;position:sticky;bottom:-22px;background:var(--card);padding:12px 0 0}
+.modal .actions .btn{flex:1}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-weight:600;color:var(--muted);font-size:14px}
+.seg button.on{background:var(--card);color:var(--brand);box-shadow:var(--shadow)}
+.stepper{display:flex;gap:10px;align-items:center}
+.stepper button{width:54px;height:54px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:26px;font-weight:700}
+.stepper input{text-align:center;font-size:28px;font-weight:800;padding:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{border:1px solid var(--line);background:var(--card);padding:9px 14px;border-radius:99px;font-weight:700}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.sumbox{background:var(--bg);border-radius:14px;padding:14px;margin-top:16px;display:flex;justify-content:space-between;align-items:baseline}
+.sumbox b{font-size:24px}
+.change{margin-top:14px;border-radius:16px;padding:16px;text-align:center;background:var(--brand-soft);color:var(--brand)}
+.change small{display:block;font-weight:700;opacity:.9}
+.change b{font-size:44px;letter-spacing:-.02em}
+.change.short{background:var(--danger-soft);color:var(--danger)}
+.err{color:var(--danger);font-size:13px;font-weight:600;margin-top:8px;min-height:18px}
+.photo{display:flex;gap:12px;align-items:center}
+.photo .thumb{width:72px;height:72px;background:var(--bg);color:var(--muted);flex:none}
+.photo .btns{display:flex;gap:8px;flex-wrap:wrap}
+.scan{position:fixed;inset:0;background:#000;z-index:80;display:none;flex-direction:column}
+.scan.on{display:flex}
+.scan video{flex:1;width:100%;object-fit:cover;min-height:0}
+.scan .bar{padding:16px;display:flex;gap:12px;align-items:center;background:#000;color:#fff}
+.scan .bar span{flex:1;font-size:14px}
+.scan .frame{position:absolute;left:50%;top:42%;width:min(78vw,340px);height:150px;transform:translate(-50%,-50%);border:3px solid #6ee7a8;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.45)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.set-grp{margin-bottom:16px}
+.set-grp h3{margin-bottom:14px;font-size:16px}
+.set-btns{display:flex;flex-wrap:wrap;gap:10px}
+
+.pill.gc{background:color-mix(in srgb,var(--blue) 14%,transparent);color:var(--blue)}
+.pill.ut{background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber)}
+.stat .sub{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+.hero.h3{grid-template-columns:1.2fr 1fr 1fr}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:16px}
+.cols2 h3{font-size:17px;margin-bottom:8px}
+.krow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.krow:first-of-type{border-top:0}
+.krow.t{font-weight:800;font-size:17px}
+.krow .num{width:140px;text-align:right;padding:9px 12px}
+.krow small{color:var(--muted);display:block;font-weight:500}
+.cnt .change{margin-top:12px}
+.cnt .change b{font-size:30px}
+.change.over{background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber)}
+details.den{margin-top:8px}
+details.den summary{cursor:pointer;color:var(--brand);font-weight:700;padding:6px 0}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.dgrid label{margin:0;font-size:12px}
+.dgrid input{padding:8px 10px}
+.crow{display:grid;grid-template-columns:42px 1fr auto auto;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.crow:first-child{border-top:0}
+.av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#1c2a22}
+.crow .nm small{color:var(--muted);display:block}
+.crow .bal{font-weight:800;font-size:18px;text-align:right}
+.ls{display:none}
+.mail{white-space:pre-wrap;background:var(--bg);border-radius:12px;padding:14px;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;max-height:38vh;overflow:auto;margin:0}
+.modal.wide{max-width:560px}
+.meter{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0}
+.meter>i{display:block;height:100%;background:var(--brand);border-radius:99px}
+.split{margin-bottom:12px}
+.split .top{display:flex;justify-content:space-between;margin-bottom:4px;font-weight:600}
+.split .bar{height:9px;border-radius:99px;background:var(--line);overflow:hidden}
+.split .bar i{display:block;height:100%;border-radius:99px}
+.grp+.grp{margin-top:10px;border-top:2px solid var(--line);padding-top:4px}
+.grph{display:flex;justify-content:space-between;align-items:center;padding:6px 0 2px}
+.grph+.line{border-top:0}
+.sec{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.sec .sech{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sec .sech b{font-size:20px}
+.sec .change b{font-size:34px}
+.hint{color:var(--muted);font-size:13px;margin-top:8px;min-height:18px}
+@media (max-width:1100px){
+  .hero.h3{grid-template-columns:1fr 1fr}
+  .cols2{grid-template-columns:1fr}
+}
+@media (max-width:1100px){
+  .hero{grid-template-columns:1fr 1fr}
+  .stat.main{grid-column:1/-1}
+  .cols{grid-template-columns:1fr}
+}
+@media (max-width:900px){
+  .cashier{grid-template-columns:1fr}
+  .cart{position:static;max-height:none}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  .side{order:2;flex-direction:row;border-right:0;border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+  .brand,.side .foot{display:none}
+  .nav{flex-direction:row;width:100%;gap:2px}
+  .nav button{flex:1;flex-direction:column;gap:3px;padding:8px 1px;font-size:10px;text-align:center;min-width:0}
+  .lf{display:none}.ls{display:inline}
+  .crow{grid-template-columns:42px 1fr auto}
+  .crow .acts{grid-column:1/-1;justify-content:flex-start}
+  .krow .num{width:120px}
+  main{padding:16px 14px 28px}
+  .head h1{font-size:22px}
+  .stat.main .n{font-size:36px}
+  .prow{grid-template-columns:54px 1fr auto;gap:10px}
+  .prow .c,.prow.h{display:none}
+  .prow .acts{grid-column:1/-1;justify-content:flex-start}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:9px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="logo">T</div><div><b id="brandName">Tindahan POS</b><small>Sari-sari store</small></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="foot">Draft v0.1 · data saved on this device</div>
+  </aside>
+  <main id="view"></main>
+</div>
+
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<div class="scan" id="scan">
+  <video id="vid" playsinline muted></video><div class="frame"></div>
+  <div class="bar"><span id="scanMsg">Point the camera at the barcode</span><button class="btn" onclick="stopScan()">Close</button></div>
+</div>
+<div class="toast" id="toast"></div>
+<input type="file" id="importFile" accept="application/json" hidden>
+
+<script>
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='tindahan_pos_v1';
+const I={
+  dash:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM13 3v6h8V3zM3 21h8v-6H3z"/>',
+  cashier:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H6"/>',
+  products:'<path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/>',
+  history:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  utang:'<path d="M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3zM9 8h6M9 12h6"/>',
+  cash:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 7h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/>'
+};
+const ico=n=>`<svg viewBox="0 0 24 24">${I[n]}</svg>`;
+const TABS=[['dashboard','Dashboard','dash'],['cashier','Cashier','cashier'],['products','Product List','products','Products'],['utang','Utang','utang'],['cashcount','Cash Count','cash','Count'],['history','History','history'],['settings','Settings','settings']];
+
+/* ---------- data ---------- */
+let db, tab='dashboard', cart=[], q='', hf='today';
+const mth=s=>s.method||'cash';
+const MLABEL={cash:'Cash',gcash:'GCash',utang:'Utang'};
+function seed(){
+  const P=[
+    ['Lucky Me Pancit Canton','4800016644801',12,15,'pc',40],['Coke Mismo 200ml','4801981116301',14,18,'pc',24],
+    ['Nescafe 3-in-1 Stick','4800361417600',5.5,7,'pc',60],['Piattos 40g','4800016059301',14,18,'pc',18],
+    ['Boy Bawang 100g','4800194130019',16,20,'pc',12],['Skyflakes Pack','4800016550201',7,10,'pack',30],
+    ['Safeguard Soap','4902430744203',32,38,'pc',3],['Tide Sachet','4902430730113',6,8,'pack',50],
+    ['Egg (small)','',8,10,'pc',60],['Rice (Regular)','',48,55,'kg',25],['Sugar (Brown)','',70,80,'kg',10],
+    ['Century Tuna 155g','4800249902306',32,38,'pc',15],['Candy','',0.5,1,'pc',200],['Bear Brand Sachet','4800361381413',12,15,'pack',2]
+  ];
+  const products=P.map((p,i)=>({id:'p'+(i+1),name:p[0],barcode:p[1],cost:p[2],price:p[3],unit:p[4],stock:p[5],img:''}));
+  const customers=[['Aling Rosa','0917 123 4567'],['Mang Tony',''],['Ate Joy','0922 555 0101'],['Kuya Ben','']].map((c,i)=>({id:'c'+(i+1),name:c[0],phone:c[1]}));
+  const sales=[],payments=[]; let sid=1,yid=1;
+  for(let d=6;d>=0;d--){
+    const n=d===0?7:8+Math.floor(Math.random()*12);
+    for(let k=0;k<n;k++){
+      const t=new Date(); t.setDate(t.getDate()-d); t.setHours(7+Math.floor(Math.random()*(d===0?5:13)),Math.floor(Math.random()*60),0,0);
+      const items=[]; const cnt=1+Math.floor(Math.random()*3);
+      for(let j=0;j<cnt;j++){
+        const p=products[Math.floor(Math.random()*products.length)];
+        if(items.find(x=>x.pid===p.id)) continue;
+        const qty=p.unit==='kg'?[0.25,0.5,1][Math.floor(Math.random()*3)]:1+Math.floor(Math.random()*3);
+        items.push({pid:p.id,name:p.name,qty,unit:p.unit,price:p.price,cost:p.cost});
+      }
+      const total=items.reduce((s,x)=>s+x.qty*x.price,0), profit=items.reduce((s,x)=>s+x.qty*(x.price-x.cost),0);
+      const r=Math.random(),method=r<.62?'cash':r<.88?'gcash':'utang';
+      const sale={id:'s'+(sid++),t:t.getTime(),items,total,profit,method,paid:method==='utang'?0:total,change:0};
+      if(method==='utang')sale.cid=customers[Math.floor(Math.random()*customers.length)].id;
+      if(method==='gcash')sale.ref=String(1000+Math.floor(Math.random()*9000));
+      sales.push(sale);
+    }
+  }
+  sales.sort((a,b)=>a.t-b.t);
+  customers.forEach((c,i)=>{
+    const b=sales.filter(x=>x.cid===c.id).reduce((a,x)=>a+x.total,0),pay=Math.floor(b*.5/5)*5;
+    if(pay>0){const t=new Date();t.setDate(t.getDate()-(i%2?0:1));t.setHours(i%2?7:15,30,0,0);payments.push({id:'y'+(yid++),t:t.getTime(),cid:c.id,amount:pay,method:i%2?'gcash':'cash',ref:''})}
+  });
+  return {v:2,settings:{store:'Aling Nena Store',cur:'₱',low:5,theme:'auto'},products,customers,sales,payments,closes:[],seq:{p:P.length+1,s:sid,c:customers.length+1,y:yid}};
+}
+function ensure(d){
+  d.products=d.products||[];d.sales=d.sales||[];d.customers=d.customers||[];d.payments=d.payments||[];d.closes=d.closes||[];
+  d.seq=d.seq||{};d.seq.p=d.seq.p||d.products.length+1;d.seq.s=d.seq.s||d.sales.length+1;d.seq.c=d.seq.c||d.customers.length+1;d.seq.y=d.seq.y||d.payments.length+1;
+  d.settings=Object.assign({store:'',cur:'₱',low:5,theme:'auto'},d.settings);return d;
+}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return null}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
+db=ensure(load()||seed()); save();
+
+const money=n=>db.settings.cur+(+n).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const unitName=u=>u==='kg'?'kg':u;
+function fq(q,u){ if(u==='kg') return q<1?Math.round(q*1000)+' g':(+q.toFixed(3))+' kg'; return q+' '+u }
+const prod=id=>db.products.find(p=>p.id===id);
+const day0=(d=new Date())=>{const x=new Date(d);x.setHours(0,0,0,0);return x.getTime()};
+const DAY=864e5;
+const tracked=p=>p.stock!==''&&p.stock!==null&&p.stock!==undefined;
+function hue(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h}
+const tint=s=>`background:hsl(${hue(s)} 55% 86%)`;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)}
+
+/* ---------- shell ---------- */
+function applyTheme(){const t=db.settings.theme;if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t)}
+function renderNav(){
+  $('nav').innerHTML=TABS.map(([k,l,i,sh])=>`<button class="${(tab===k||(k==='history'&&tab==='report'))?'on':''}" onclick="go('${k}')">${ico(i)}<span class="lf">${l}</span><span class="ls">${sh||l}</span></button>`).join('');
+  $('brandName').textContent=db.settings.store||'Tindahan POS';
+}
+function go(t){if(t!==tab)q='';tab=t;renderNav();({dashboard,cashier,products,utang,cashcount,history,report,settings})[t]();$('view').scrollTop=0}
+
+/* ---------- dashboard ---------- */
+function range(a,b){return db.sales.filter(s=>s.t>=a&&s.t<b)}
+function niceCeil(m){const p=10**Math.floor(Math.log10(m)),n=m/p;return(n<=1?1:n<=2?2:n<=5?5:10)*p}
+function chartSVG(days){
+  const W=700,H=250,pl=48,pr=10,pt=22,pb=30,iw=W-pl-pr,ih=H-pt-pb;
+  const top=niceCeil(Math.max(10,...days.map(d=>d.v)));
+  let g='';
+  for(let i=0;i<=4;i++){const y=pt+ih-ih*i/4;g+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}"/><text class="ax" x="${pl-8}" y="${y+4}" text-anchor="end">${top*i/4>=1000?(top*i/4/1000)+'k':top*i/4}</text>`}
+  const bw=iw/days.length;
+  days.forEach((d,i)=>{
+    const h=ih*d.v/top,x=pl+i*bw+bw*.18,w=bw*.64,y=pt+ih-h;
+    if(d.v>0||days.length<=10)g+=`<rect class="bar ${d.today?'today':''}" x="${x}" y="${y}" width="${w}" height="${Math.max(h,1)}" rx="6"><title>${d.full}: ${money(d.v)}</title></rect>`;
+    if(days.length<=10)g+=`<text class="val" x="${x+w/2}" y="${y-6}">${Math.round(d.v)}</text>`;
+    g+=`<text class="ax" x="${x+w/2}" y="${H-9}" text-anchor="middle">${d.label}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Clean earnings, last 7 days">${g}</svg>`;
+}
+const sumBy=(a,f)=>+a.reduce((s,x)=>s+f(x),0).toFixed(2);
+function dayStats(a){
+  const b=a+DAY,S=range(a,b),P=db.payments.filter(p=>p.t>=a&&p.t<b),by=m=>S.filter(x=>mth(x)===m);
+  return {S,P,total:sumBy(S,x=>x.total),profit:sumBy(S,x=>x.profit),
+    cashSales:sumBy(by('cash'),x=>x.total),gcashSales:sumBy(by('gcash'),x=>x.total),utangGiven:sumBy(by('utang'),x=>x.total),utangProfit:sumBy(by('utang'),x=>x.profit),
+    cashIn:sumBy(P.filter(p=>p.method==='cash'),p=>p.amount),gcashIn:sumBy(P.filter(p=>p.method==='gcash'),p=>p.amount)};
+}
+function dashboard(){
+  const t0=day0(),st=dayStats(t0),today=st.S,profit=st.profit,yp=dayStats(t0-DAY).profit,sales=st.total;
+  const itemsSold=today.reduce((s,x)=>s+x.items.reduce((a,i)=>a+(i.unit==='kg'?1:i.qty),0),0);
+  let delta='No sales yesterday';
+  if(yp>0){const p=(profit-yp)/yp*100;delta=`${p>=0?'▲':'▼'} ${Math.abs(p).toFixed(0)}% vs yesterday`}
+  const days=[];
+  for(let i=6;i>=0;i--){const a=t0-i*DAY,d=new Date(a);days.push({v:range(a,a+DAY).reduce((s,x)=>s+x.profit,0),today:i===0,label:i===0?'Today':d.toLocaleDateString('en-US',{weekday:'short'}),full:d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})})}
+  const tally={};today.forEach(s=>s.items.forEach(i=>{const o=tally[i.pid]||(tally[i.pid]={name:i.name,unit:i.unit,q:0,p:0});o.q+=i.qty;o.p+=i.qty*(i.price-i.cost)}));
+  const top=Object.values(tally).sort((a,b)=>b.p-a.p).slice(0,5);
+  const low=db.products.filter(p=>tracked(p)&&p.stock<=db.settings.low).sort((a,b)=>a.stock-b.stock);
+  const owing=db.customers.map(c=>bal(c.id)).filter(b=>b>0),owed=sumBy(owing,x=>x);
+  $('view').innerHTML=`
+  <div class="head"><div><h1>Good day${db.settings.store?', '+esc(db.settings.store):''} 👋</h1><p>${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</p></div>
+    <button class="btn primary big" onclick="go('cashier')">${ico('cashier')}Open Cashier</button></div>
+  <div class="hero">
+    <div class="card stat main"><small>CLEAN EARNINGS TODAY</small><div class="n">${money(profit)}</div><div class="delta">${delta}</div>${st.utangProfit>0?`<div class="delta">incl. ${money(st.utangProfit)} still on utang</div>`:''}</div>
+    <div class="card stat"><small>Total sales</small><div class="n">${money(sales)}</div><div class="sub">Cash ${money(st.cashSales)} · GCash ${money(st.gcashSales)}${st.utangGiven?` · Utang ${money(st.utangGiven)}`:''}</div></div>
+    <div class="card stat"><small>Customers</small><div class="n">${today.length}</div></div>
+    <div class="card stat"><small>Items sold</small><div class="n">${itemsSold}</div></div>
+  </div>
+  <div class="cols">
+    <div class="card chart"><h3>Clean earnings · last 7 days</h3>${chartSVG(days)}</div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card"><h3>Best sellers today</h3>${top.length?top.map(t=>`<div class="list-row"><span>${esc(t.name)}<br><small class="muted">${fq(+t.q.toFixed(3),t.unit)} sold</small></span><b class="pos">+${money(t.p)}</b></div>`).join(''):'<div class="muted">No sales yet today.</div>'}</div>
+      <div class="card"><h3>Utang to collect</h3><div class="stat"><div class="n neg" style="font-size:26px;margin:0 0 4px">${money(owed)}</div></div><div class="muted">${owing.length} customer${owing.length===1?'':'s'} with balance</div><button class="btn sm" style="margin-top:10px" onclick="go('utang')">Open Utang</button></div>
+      <div class="card"><h3>Running low</h3>${low.length?low.slice(0,6).map(p=>`<div class="list-row"><span>${esc(p.name)}</span><span class="pill">${p.stock<=0?'Out':fq(p.stock,p.unit)+' left'}</span></div>`).join(''):'<div class="muted">Stock looks good 👍</div>'}</div>
+    </div>
+  </div>`;
+}
+
+/* ---------- cashier ---------- */
+const cartTotal=()=>cart.reduce((s,l)=>s+l.qty*prod(l.pid).price,0);
+const groupTotal=m=>cart.filter(l=>l.m===m).reduce((s,l)=>s+l.qty*prod(l.pid).price,0);
+const inCart=pid=>cart.filter(l=>l.pid===pid).reduce((s,l)=>s+l.qty,0);
+function cashier(){
+  $('view').innerHTML=`
+  <div class="head"><div><h1>Cashier</h1><p>Tap a product, enter how many, pick Cash, GCash or Utang, then press OK.</p></div></div>
+  <div class="cashier">
+    <div>
+      <div class="tools"><input type="search" id="qs" placeholder="Search product…" value="${esc(q)}" oninput="q=this.value;drawGrid()">
+        <button class="btn" onclick="scanFor(onCashierScan)">${ico('scan')}Scan</button></div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div class="card cart"><h3>Current order <button class="btn sm" onclick="clearCart()">Clear</button></h3>
+      <div class="lines" id="lines"></div>
+      <div class="total"><span>TOTAL</span><b id="tot"></b></div>
+      <button class="btn primary big" id="co" onclick="openCheckout()">Checkout</button>
+    </div>
+  </div>`;
+  drawGrid(); drawCart();
+}
+function drawGrid(){
+  const s=q.trim().toLowerCase();
+  const list=db.products.filter(p=>!s||p.name.toLowerCase().includes(s)||p.barcode.includes(s));
+  $('grid').innerHTML=list.length?list.map(p=>`
+    <button class="tile" onclick="openQty('${p.id}')">
+      <div class="pic" style="${p.img?'':tint(p.name)}">${p.img?`<img src="${p.img}" alt="">`:esc(p.name)}</div>
+      ${tracked(p)&&p.stock<=0?'<span class="badge">Out</span>':''}
+      <div class="meta"><b>${esc(p.name)}</b><span>${money(p.price)} / ${unitName(p.unit)}</span></div>
+    </button>`).join(''):`<div class="empty" style="grid-column:1/-1">No product found.<br><button class="btn sm" style="margin-top:10px" onclick="go('products')">Go to Product List</button></div>`;
+}
+function drawCart(){
+  if(!$('lines'))return;
+  const groups=['cash','gcash','utang'].map(m=>({m,ls:cart.filter(l=>l.m===m)})).filter(g=>g.ls.length);
+  $('lines').innerHTML=groups.length?groups.map(g=>`<div class="grp"><div class="grph">${mpill(g.m)}<b>${money(groupTotal(g.m))}</b></div>${g.ls.map(l=>{const p=prod(l.pid);return`
+    <div class="line" onclick="openQty('${p.id}',true,'${l.m}')"><div><b>${esc(p.name)}</b><small>${fq(l.qty,p.unit)} \u00d7 ${money(p.price)}/${unitName(p.unit)}</small></div><div class="amt">${money(l.qty*p.price)}</div></div>`}).join('')}</div>`).join(''):'<div class="empty">No items yet.<br>Tap a product to add.</div>';
+  $('tot').textContent=money(cartTotal()); $('co').disabled=!cart.length;
+}
+function clearCart(){if(cart.length&&confirm('Clear this order?')){cart=[];drawCart()}}
+function onCashierScan(code){
+  const p=db.products.find(x=>x.barcode===code);
+  if(p){openQty(p.id)}else toast('Barcode '+code+' is not registered yet');
+}
+
+let qtyState=null,lastM='cash';
+const MICON={cash:'\ud83d\udcb5',gcash:'\ud83d\udcf1',utang:'\ud83d\udcd2'};
+function openQty(pid,editing,m){
+  const p=prod(pid),w=p.unit==='kg';
+  const line=editing?cart.find(l=>l.pid===pid&&l.m===m):null;
+  if(!line&&tracked(p)&&p.stock-inCart(pid)<=0){toast(p.name+(inCart(pid)?' - no more stock left':' is out of stock'));return}
+  const start=line?line.qty:(w?0.25:1);
+  qtyState={p,w,line,m:line?line.m:lastM};
+  openModal(`
+    <h2>${esc(p.name)}</h2><div class="sub">${money(p.price)} per ${unitName(p.unit)}${tracked(p)?` \u00b7 ${fq(p.stock,p.unit)} in stock`:''}</div>
+    <div class="field"><label>${w?'Weight (grams)':'How many '+p.unit+'?'}</label>
+      <div class="stepper"><button onclick="stepQty(-1)">\u2212</button>
+        <input type="number" id="qin" inputmode="${w?'decimal':'numeric'}" min="0" step="${w?'10':'1'}" value="${w?Math.round(start*1000):start}" oninput="calcQty()" onkeydown="if(event.key==='Enter')okQty()">
+        <button onclick="stepQty(1)">+</button></div>
+      <div class="chips">${(w?[100,250,500,1000]:[1,2,3,5,10]).map(v=>`<button class="chip" onclick="setQty(${v})">${w?(v>=1000?'1 kg':v+' g'):v}</button>`).join('')}</div></div>
+    <div class="field"><label>Payment method</label><div class="seg" id="q_m">${['cash','gcash','utang'].map(k=>`<button data-m="${k}" onclick="setQM('${k}')">${MICON[k]} ${MLABEL[k]}</button>`).join('')}</div><div class="hint" id="q_hint"></div></div>
+    <div class="sumbox"><span class="muted">Amount</span><b id="qsum"></b></div>
+    <div class="err" id="qerr"></div>
+    <div class="actions">${line?`<button class="btn danger" onclick="removeLine('${p.id}','${line.m}')">Remove</button>`:`<button class="btn" onclick="closeModal()">Cancel</button>`}<button class="btn primary big" onclick="okQty()">OK</button></div>`);
+  setQM(qtyState.m);calcQty(); setTimeout(()=>{const i=$('qin');i.focus();i.select()},50);
+}
+function setQM(m){
+  qtyState.m=m;
+  document.querySelectorAll('#q_m button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('q_hint').textContent={cash:'Goes to the Cash list.',gcash:'Goes to the GCash list.',utang:'Goes to the Utang list \u2014 you choose the customer at checkout.'}[m];
+}
+const qtyVal=()=>{const v=parseFloat($('qin').value)||0;return qtyState.w?v/1000:Math.floor(v)};
+function calcQty(){$('qsum').textContent=money(qtyVal()*qtyState.p.price);$('qerr').textContent=''}
+function stepQty(d){const i=$('qin');const s=qtyState.w?50:1;i.value=Math.max(0,(parseFloat(i.value)||0)+d*s);calcQty()}
+function setQty(v){$('qin').value=v;calcQty()}
+function okQty(){
+  const {p,line,m}=qtyState,v=qtyVal();
+  if(v<=0){$('qerr').textContent='Enter an amount greater than zero.';return}
+  const base=cart.filter(l=>l!==line),others=base.filter(l=>l.pid===p.id).reduce((a,l)=>a+l.qty,0);
+  if(tracked(p)&&others+v>p.stock+1e-9){$('qerr').textContent=`Only ${fq(Math.max(0,+(p.stock-others).toFixed(3)),p.unit)} left in stock.`;return}
+  const same=base.find(l=>l.pid===p.id&&l.m===m);
+  cart=base;
+  if(same)same.qty=+(same.qty+v).toFixed(3);else cart.push({pid:p.id,qty:+v.toFixed(3),m});
+  lastM=m;closeModal();drawCart();
+}
+function removeLine(pid,m){cart=cart.filter(l=>!(l.pid===pid&&l.m===m));closeModal();drawCart()}
+
+/* checkout */
+let paid=0;
+const mpill=m=>`<span class="pill ${m==='gcash'?'gc':m==='utang'?'ut':'ok'}">${MICON[m]} ${MLABEL[m]}</span>`;
+function openCheckout(){paid=0;renderCheckout()}
+function renderCheckout(){
+  const tc=+groupTotal('cash').toFixed(2),tg=+groupTotal('gcash').toFixed(2),tu=+groupTotal('utang').toFixed(2),all=cartTotal();
+  let body='';
+  if(tc>0){
+    const bills=[20,50,100,200,500,1000].filter(b=>b>=tc).slice(0,4);
+    body+=`<div class="sec"><div class="sech">${mpill('cash')}<b>${money(tc)}</b></div>
+      <label>Customer paid (${db.settings.cur})</label>
+      <input type="number" id="paid" inputmode="decimal" min="0" step="any" placeholder="0.00" style="font-size:24px;font-weight:800" oninput="calcChange()" onkeydown="if(event.key==='Enter')finishSale()">
+      <div class="chips"><button class="chip" onclick="setPaid(${tc})">Exact</button>${bills.map(b=>`<button class="chip" onclick="setPaid(${b})">${db.settings.cur}${b}</button>`).join('')}</div>
+      <div class="change" id="chg"></div></div>`;
+  }
+  if(tg>0){
+    body+=`<div class="sec"><div class="sech">${mpill('gcash')}<b>${money(tg)}</b></div>
+      <label>GCash reference no. (optional)</label><input type="text" id="g_ref" inputmode="numeric" placeholder="Last digits of the reference no.">
+      <div class="muted" style="font-size:13px;margin-top:8px">Check that the GCash \u201cmoney received\u201d message shows ${money(tg)}.</div></div>`;
+  }
+  if(tu>0){
+    const opts=db.customers.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>{const b=bal(c.id);return`<option value="${c.id}">${esc(c.name)}${b>0?' \u00b7 owes '+money(b):''}</option>`}).join('');
+    body+=`<div class="sec"><div class="sech">${mpill('utang')}<b>${money(tu)}</b></div>
+      <label>Who is taking it on utang?</label><select id="u_c" onchange="uSel()"><option value="">Choose customer\u2026</option>${opts}<option value="__new">\uff0b New customer</option></select>
+      <div id="u_new" style="display:none;margin-top:10px"><label>Customer name</label><input type="text" id="u_name" placeholder="e.g. Aling Rosa"></div>
+      <div class="sumbox" style="margin-top:10px"><span class="muted">New balance owed</span><b id="u_bal" style="font-size:20px">\u2014</b></div></div>`;
+  }
+  openModal(`<h2>Checkout</h2><div class="sub">${cart.length} item${cart.length>1?'s':''} \u00b7 total ${money(all)}</div>${body}
+    <div class="err" id="co_err"></div>
+    <div class="actions"><button class="btn" onclick="closeModal()">Back</button><button class="btn primary big" id="fin" onclick="finishSale()">Complete sale</button></div>`);
+  if(tc>0){calcChange();setTimeout(()=>$('paid').focus(),50)}
+}
+function uSel(){
+  const v=$('u_c').value,total=+groupTotal('utang').toFixed(2);
+  $('u_new').style.display=v==='__new'?'block':'none';$('co_err').textContent='';
+  $('u_bal').textContent=!v?'\u2014':money((v==='__new'?0:bal(v))+total);
+  if(v==='__new')setTimeout(()=>$('u_name').focus(),30);
+}
+function setPaid(v){$('paid').value=v;calcChange()}
+function calcChange(){
+  const total=+groupTotal('cash').toFixed(2),p=parseFloat($('paid').value)||0,box=$('chg');
+  paid=p;
+  if(!p){box.className='change';box.innerHTML='<small>CHANGE</small><b>\u2014</b>';$('fin').disabled=true}
+  else if(p+1e-9<total){box.className='change short';box.innerHTML=`<small>NOT ENOUGH \u00b7 SHORT BY</small><b>${money(total-p)}</b>`;$('fin').disabled=true}
+  else{box.className='change';box.innerHTML=`<small>GIVE CHANGE</small><b>${money(p-total)}</b>`;$('fin').disabled=false}
+}
+function finishSale(){
+  if(!cart.length)return;
+  const tc=+groupTotal('cash').toFixed(2),tg=+groupTotal('gcash').toFixed(2),tu=+groupTotal('utang').toFixed(2),all=cartTotal();
+  const err=m=>{$('co_err').textContent=m};
+  if(tc>0&&(!paid||paid+1e-9<tc))return err('Enter the cash the customer paid.');
+  let cid=null;
+  if(tu>0){
+    cid=$('u_c').value;
+    if(!cid)return err('Please choose who takes the utang.');
+    if(cid==='__new'){const nm=$('u_name').value.trim();if(!nm)return err('Please enter the customer name.');cid='c'+(db.seq.c++);db.customers.push({id:cid,name:nm,phone:''})}
+  }
+  const now=Date.now(),change=tc>0?+(paid-tc).toFixed(2):0;
+  const mk=(m,extra)=>{
+    const ls=cart.filter(l=>l.m===m);
+    const items=ls.map(l=>{const p=prod(l.pid);return{pid:p.id,name:p.name,qty:l.qty,unit:p.unit,price:p.price,cost:p.cost}});
+    db.sales.push({id:'s'+(db.seq.s++),t:now,items,total:+groupTotal(m).toFixed(2),profit:items.reduce((s,x)=>s+x.qty*(x.price-x.cost),0),method:m,paid:0,change:0,...extra});
+  };
+  if(tc>0)mk('cash',{paid,change});
+  if(tg>0)mk('gcash',{paid:tg,ref:($('g_ref').value||'').trim()});
+  if(tu>0)mk('utang',{cid});
+  cart.forEach(l=>{const p=prod(l.pid);if(tracked(p))p.stock=Math.max(0,+(p.stock-l.qty).toFixed(3))});
+  save();cart=[];
+  let h=`<div style="text-align:center"><div style="font-size:46px">\u2705</div><h2>Sale complete</h2><div class="sub">Total ${money(all)}</div>`;
+  if(tc>0)h+=`<div class="change"><small>\ud83d\udcb5 CASH \u00b7 GIVE CHANGE</small><b>${money(change)}</b></div>`;
+  if(tg>0)h+=`<div class="sumbox"><span class="muted">\ud83d\udcf1 GCash received</span><b>${money(tg)}</b></div>`;
+  if(tu>0)h+=`<div class="sumbox"><span class="muted">\ud83d\udcd2 ${esc(cname(cid))} now owes</span><b>${money(bal(cid))}</b></div>`;
+  openModal(h+`<div class="actions"><button class="btn primary big" onclick="closeModal()">New order</button></div></div>`);
+  drawCart();drawGrid();
+}
+
+/* ---------- utang ---------- */
+const bal=cid=>+(((db.customers.find(c=>c.id===cid)||{}).opening||0)+db.sales.filter(s=>s.method==='utang'&&s.cid===cid).reduce((a,s)=>a+s.total,0)-db.payments.filter(p=>p.cid===cid).reduce((a,p)=>a+p.amount,0)).toFixed(2);
+const cname=cid=>(db.customers.find(c=>c.id===cid)||{name:'(deleted customer)'}).name;
+function utang(){
+  const owed=sumBy(db.customers.map(c=>bal(c.id)).filter(b=>b>0),x=>x),n=db.customers.filter(c=>bal(c.id)>0).length,st=dayStats(day0());
+  $('view').innerHTML=`
+  <div class="head"><div><h1>Utang</h1><p>Customers who buy now and pay later.</p></div><button class="btn primary big" onclick="openCustomer()">${ico('plus')}Add customer</button></div>
+  <div class="hero h3">
+    <div class="card stat main"><small>TOTAL TO COLLECT</small><div class="n">${money(owed)}</div><div class="delta">${n} customer${n===1?'':'s'} with balance</div></div>
+    <div class="card stat"><small>Given on utang today</small><div class="n">${money(st.utangGiven)}</div></div>
+    <div class="card stat"><small>Collected today</small><div class="n">${money(st.cashIn+st.gcashIn)}</div></div>
+  </div>
+  <div class="tools"><input type="search" placeholder="Search customer…" value="${esc(q)}" oninput="q=this.value;drawCust()"></div>
+  <div class="card" id="clist"></div>`;
+  drawCust();
+}
+function drawCust(){
+  const s=q.trim().toLowerCase();
+  const list=db.customers.map(c=>({...c,b:bal(c.id)})).filter(c=>!s||c.name.toLowerCase().includes(s)).sort((a,b)=>b.b-a.b||a.name.localeCompare(b.name));
+  $('clist').innerHTML=list.length?list.map(c=>`<div class="crow"><div class="av" style="${tint(c.name)}">${esc(c.name.trim().slice(0,1).toUpperCase())}</div>
+    <div class="nm"><b>${esc(c.name)}</b><small>${esc(c.phone||'No phone number')}</small></div>
+    <div class="bal ${c.b>0?'neg':'muted'}">${c.b>0?money(c.b):'Paid up'}</div>
+    <div class="acts"><button class="btn sm primary" ${c.b>0?'':'disabled'} onclick="openPay('${c.id}')">Collect</button><button class="btn sm" onclick="openLedger('${c.id}')">Details</button></div></div>`).join(''):'<div class="empty">No customers yet.<br>Add one here, or while checking out on utang.</div>';
+}
+function openCustomer(id){
+  const c=id?db.customers.find(x=>x.id===id):null;
+  openModal(`<h2>${c?'Edit customer':'Add customer'}</h2><div class="sub">Just a name is enough.</div>
+    <div class="field"><label>Name</label><input type="text" id="cu_name" value="${esc(c?c.name:'')}" placeholder="e.g. Aling Rosa"></div>
+    <div class="field"><label>Phone (optional)</label><input type="text" id="cu_phone" inputmode="tel" value="${esc(c?c.phone:'')}"></div>
+    <div class="err" id="cu_err"></div>
+    <div class="actions">${c&&bal(c.id)<=0?`<button class="btn danger" onclick="delCustomer('${c.id}')">Delete</button>`:`<button class="btn" onclick="closeModal()">Cancel</button>`}<button class="btn primary big" onclick="saveCustomer('${id||''}')">Save</button></div>`);
+  setTimeout(()=>$('cu_name').focus(),50);
+}
+function saveCustomer(id){
+  const name=$('cu_name').value.trim(),phone=$('cu_phone').value.trim();
+  if(!name)return $('cu_err').textContent='Please enter the name.';
+  if(id)Object.assign(db.customers.find(c=>c.id===id),{name,phone});else db.customers.push({id:'c'+(db.seq.c++),name,phone});
+  save();closeModal();toast('Customer saved');go(tab);
+}
+function delCustomer(id){if(confirm('Delete this customer?')){db.customers=db.customers.filter(c=>c.id!==id);save();closeModal();go(tab)}}
+function openLedger(cid){
+  const c=db.customers.find(x=>x.id===cid);
+  const e=[...db.sales.filter(s=>s.method==='utang'&&s.cid===cid).map(s=>({t:s.t,d:s.items.map(i=>esc(i.name)+' ×'+(i.unit==='kg'?fq(i.qty,'kg'):i.qty)).join(', '),a:s.total})),
+    ...db.payments.filter(p=>p.cid===cid).map(p=>({t:p.t,d:'Payment · '+MLABEL[p.method],a:-p.amount,pay:1}))].sort((x,y)=>x.t-y.t);
+  let run=c.opening||0;e.forEach(x=>{run=+(run+x.a).toFixed(2);x.r=run});
+  openModal(`<h2>${esc(c.name)}</h2><div class="sub">${c.phone?esc(c.phone)+' · ':''}Balance <b class="${run>0?'neg':'pos'}">${money(run)}</b></div>
+    <div style="max-height:46vh;overflow:auto">${e.length?e.slice().reverse().map(x=>`<div class="list-row"><span><b>${new Date(x.t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</b><br><small class="muted">${x.d}</small></span>
+      <span style="text-align:right;white-space:nowrap"><b class="${x.pay?'pos':''}">${x.pay?'−':'+'}${money(Math.abs(x.a))}</b><br><small class="muted">balance ${money(x.r)}</small></span></div>`).join(''):'<div class="empty">No utang yet.</div>'}</div>
+    ${c.opening?`<div class="muted" style="font-size:13px;margin-top:8px">Includes ${money(c.opening)} from archived months.</div>`:''}<div class="actions"><button class="btn" onclick="openCustomer('${cid}')">Edit</button><button class="btn" onclick="closeModal()">Close</button>${run>0?`<button class="btn primary" onclick="openPay('${cid}')">Collect</button>`:''}</div>`);
+}
+let pm='cash',pcid=null;
+function openPay(cid){pcid=cid;pm='cash';renderPay()}
+function setPm(m){const v=$('p_amt').value;pm=m;renderPay();$('p_amt').value=v}
+function renderPay(){
+  const b=bal(pcid);
+  openModal(`<h2>Collect payment</h2><div class="sub">${esc(cname(pcid))} owes ${money(b)}</div>
+    <div class="seg" style="margin-bottom:14px">${[['cash','💵 Cash'],['gcash','📱 GCash']].map(([k,l])=>`<button class="${pm===k?'on':''}" onclick="setPm('${k}')">${l}</button>`).join('')}</div>
+    <div class="field"><label>Amount received (${db.settings.cur})</label><input type="number" id="p_amt" inputmode="decimal" step="any" min="0" value="${b}" style="font-size:26px;font-weight:800" onkeydown="if(event.key==='Enter')savePay()">
+      <div class="chips"><button class="chip" onclick="$('p_amt').value=${b}">Full ${money(b)}</button></div></div>
+    ${pm==='gcash'?'<div class="field"><label>GCash reference no. (optional)</label><input type="text" id="p_ref" inputmode="numeric"></div>':''}
+    <div class="err" id="p_err"></div>
+    <div class="actions"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary big" onclick="savePay()">Save payment</button></div>`);
+  setTimeout(()=>{const i=$('p_amt');i.focus();i.select()},50);
+}
+function savePay(){
+  const b=bal(pcid),a=parseFloat($('p_amt').value);
+  if(!(a>0))return $('p_err').textContent='Enter the amount received.';
+  if(a>b+1e-9)return $('p_err').textContent=`That is more than the balance (${money(b)}).`;
+  db.payments.push({id:'y'+(db.seq.y++),t:Date.now(),cid:pcid,amount:+a.toFixed(2),method:pm,ref:pm==='gcash'?($('p_ref').value||'').trim():''});
+  save();closeModal();toast('Payment saved');go(tab);
+}
+
+/* ---------- daily cash count ---------- */
+let cdate=day0();
+const dstr=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const pdate=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getTime()};
+function setCDate(v){if(v){cdate=pdate(v);cashcount()}}
+function cashcount(){
+  const st=dayStats(cdate),cl=db.closes.find(c=>c.date===cdate);
+  const prev=db.closes.filter(c=>c.date<cdate).sort((a,b)=>b.date-a.date)[0];
+  const open=cl?cl.open:(prev?prev.counted:0),v=x=>(x==null?'':x);
+  const dens=[1000,500,200,100,50,20,10,5,1];
+  const recent=db.closes.slice().sort((a,b)=>b.date-a.date).slice(0,7);
+  const dp=(d)=>d==null?'<span class="muted">—</span>':d===0?'<span class="pill ok">Balanced</span>':`<span class="pill ${d>0?'ut':''}">${d>0?'Over ':'Short '}${money(Math.abs(d))}</span>`;
+  $('view').innerHTML=`
+  <div class="head"><div><h1>Daily Cash Count</h1><p>Close the day: check the drawer and GCash separately. ${cl?'<span class="pill ok">Saved</span>':''}</p></div>
+    <input type="date" id="c_date" value="${dstr(cdate)}" max="${dstr(Date.now())}" style="width:auto" onchange="setCDate(this.value)"></div>
+  <div class="hero h3">
+    <div class="card stat main"><small>TOTAL SALES</small><div class="n">${money(st.total)}</div><div class="delta">${st.S.length} customer${st.S.length===1?'':'s'}</div></div>
+    <div class="card stat"><small>Given on utang (not collected)</small><div class="n">${money(st.utangGiven)}</div></div>
+    <div class="card stat"><small>Clean earnings</small><div class="n">${money(st.profit)}</div></div>
+  </div>
+  <div class="cols2">
+    <div class="card cnt"><h3>💵 Cash in drawer</h3>
+      <div class="krow"><span>Opening cash (float)<small>Cash you started the day with</small></span><input type="number" class="num" id="c_open" inputmode="decimal" step="any" min="0" value="${open}" oninput="recalcCount()"></div>
+      <div class="krow"><span>+ Cash sales</span><b>${money(st.cashSales)}</b></div>
+      <div class="krow"><span>+ Utang paid in cash</span><b>${money(st.cashIn)}</b></div>
+      <div class="krow"><span>− Cash taken out<small>Restock, expenses, withdrawals</small></span><input type="number" class="num" id="c_out" inputmode="decimal" step="any" min="0" value="${v(cl&&cl.out)}" placeholder="0.00" oninput="recalcCount()"></div>
+      <div class="krow t"><span>Expected in drawer</span><span id="x_exp"></span></div>
+      <div class="krow"><span><b>Counted cash</b><small>What is really in the drawer</small></span><input type="number" class="num" id="c_cnt" inputmode="decimal" step="any" min="0" value="${v(cl&&cl.counted)}" placeholder="0.00" oninput="recalcCount()"></div>
+      <details class="den"><summary>Count by bills &amp; coins</summary><div class="dgrid">${dens.map(d=>`<div><label>${db.settings.cur}${d}</label><input type="number" inputmode="numeric" min="0" step="1" data-d="${d}" placeholder="0" oninput="sumDen()"></div>`).join('')}</div></details>
+      <div class="change" id="x_res"></div></div>
+    <div class="card cnt"><h3>📱 GCash</h3>
+      <div class="krow"><span>GCash sales</span><b>${money(st.gcashSales)}</b></div>
+      <div class="krow"><span>+ Utang paid by GCash</span><b>${money(st.gcashIn)}</b></div>
+      <div class="krow t"><span>Expected GCash received</span><span id="g_exp"></span></div>
+      <div class="krow"><span><b>GCash received per app</b><small>Check today’s transactions in your GCash app</small></span><input type="number" class="num" id="g_cnt" inputmode="decimal" step="any" min="0" value="${v(cl&&cl.gcashCounted)}" placeholder="0.00" oninput="recalcCount()"></div>
+      <div class="change" id="g_res"></div>
+      <div class="field" style="margin:16px 0 0"><label>Note (optional)</label><input type="text" id="c_note" value="${esc(cl?cl.note:'')}" placeholder="e.g. ₱50 short, gave extra change"></div></div>
+  </div>
+  <div class="row" style="max-width:420px;margin-bottom:20px"><button class="btn primary big" onclick="saveCount()">${cl?'Update daily count':'Save daily count'}</button></div>
+  ${recent.length?`<div class="card"><h3 style="margin-bottom:6px;font-size:16px">Recent counts</h3>${recent.map(c=>`<div class="list-row" style="align-items:center;cursor:pointer" onclick="setCDate('${dstr(c.date)}')"><b>${new Date(c.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</b><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span>Cash ${dp(c.cashDiff)}</span><span>GCash ${dp(c.gcashDiff)}</span></span></div>`).join('')}</div>`:''}`;
+  recalcCount();
+}
+function numOf(id){const x=parseFloat($(id).value);return isNaN(x)?null:x}
+function countFigures(){
+  const st=dayStats(cdate),open=numOf('c_open')||0,out=numOf('c_out')||0;
+  return {st,open,out,exp:+(open+st.cashSales+st.cashIn-out).toFixed(2),gexp:+(st.gcashSales+st.gcashIn).toFixed(2),cnt:numOf('c_cnt'),gcnt:numOf('g_cnt')};
+}
+function showDiff(id,cnt,exp){
+  const b=$(id);
+  if(cnt==null){b.className='change';b.innerHTML='<small>ENTER THE AMOUNT YOU COUNTED</small><b>—</b>';return}
+  const d=+(cnt-exp).toFixed(2);
+  if(d===0){b.className='change';b.innerHTML='<small>DIFFERENCE</small><b>✓ Balanced</b>'}
+  else if(d>0){b.className='change over';b.innerHTML=`<small>OVER BY</small><b>${money(d)}</b>`}
+  else{b.className='change short';b.innerHTML=`<small>SHORT BY</small><b>${money(-d)}</b>`}
+}
+function recalcCount(){
+  const f=countFigures();
+  $('x_exp').textContent=money(f.exp);$('g_exp').textContent=money(f.gexp);
+  showDiff('x_res',f.cnt,f.exp);showDiff('g_res',f.gcnt,f.gexp);
+}
+function sumDen(){let t=0;document.querySelectorAll('[data-d]').forEach(i=>{t+=(parseFloat(i.value)||0)*i.dataset.d});$('c_cnt').value=t||'';recalcCount()}
+function saveCount(){
+  const f=countFigures();
+  if(f.cnt==null){toast('Enter the counted cash first');$('c_cnt').focus();return}
+  const rec={date:cdate,t:Date.now(),open:f.open,out:f.out,expectedCash:f.exp,counted:f.cnt,cashDiff:+(f.cnt-f.exp).toFixed(2),
+    gcashExpected:f.gexp,gcashCounted:f.gcnt,gcashDiff:f.gcnt==null?null:+(f.gcnt-f.gexp).toFixed(2),note:$('c_note').value.trim()};
+  db.closes=db.closes.filter(c=>c.date!==cdate);db.closes.push(rec);save();toast('Daily count saved');cashcount();
+}
+
+/* ---------- product list ---------- */
+function products(){
+  $('view').innerHTML=`
+  <div class="head"><div><h1>Product List</h1><p>${db.products.length} products registered</p></div>
+    <button class="btn primary big" onclick="openProduct()">${ico('plus')}Add product</button></div>
+  <div class="tools"><input type="search" id="ps" placeholder="Search by name or barcode…" value="${esc(q)}" oninput="q=this.value;drawPlist()"></div>
+  <div class="card"><div class="plist" id="plist"></div></div>`;
+  drawPlist();
+}
+function drawPlist(){
+  const s=q.trim().toLowerCase();
+  const list=db.products.filter(p=>!s||p.name.toLowerCase().includes(s)||p.barcode.includes(s));
+  $('plist').innerHTML=`<div class="prow h"><span></span><span>Product</span><span class="c">Cost</span><span class="c">Price</span><span class="c">Stock</span><span></span></div>`+
+  (list.map(p=>`<div class="prow">
+    <div class="thumb" style="${p.img?'':tint(p.name)}">${p.img?`<img src="${p.img}" alt="">`:esc(p.name.slice(0,12))}</div>
+    <div class="nm"><b>${esc(p.name)}</b><small>per ${unitName(p.unit)} · profit ${money(p.price-p.cost)}${p.barcode?' · '+esc(p.barcode):''}</small></div>
+    <div class="c">${money(p.cost)}</div><div class="c"><b>${money(p.price)}</b></div>
+    <div class="c">${tracked(p)?(p.stock<=db.settings.low?`<span class="pill">${p.stock<=0?'Out':fq(p.stock,p.unit)}</span>`:fq(p.stock,p.unit)):'<span class="muted">—</span>'}</div>
+    <div class="acts"><button class="btn sm" onclick="openProduct('${p.id}')">Edit</button><button class="btn sm danger" onclick="delProduct('${p.id}')">Delete</button></div></div>`).join('')||'<div class="empty">No products found.</div>');
+}
+function delProduct(id){const p=prod(id);if(confirm('Delete "'+p.name+'"? Past sales stay in history.')){db.products=db.products.filter(x=>x.id!==id);cart=cart.filter(l=>l.pid!==id);save();drawPlist()}}
+
+let form=null;
+function openProduct(id){
+  const p=id?prod(id):null;
+  form={id:id||null,unit:p?p.unit:'pc',img:p?p.img:''};
+  openModal(`
+    <h2>${p?'Edit product':'Add product'}</h2><div class="sub">Scan the barcode with the camera or type it in.</div>
+    <div class="field"><label>Barcode (optional)</label><div class="row" style="gap:8px"><input type="text" id="f_bc" inputmode="numeric" placeholder="e.g. 4800016644801" value="${esc(p?p.barcode:'')}" style="flex:1"><button class="btn" style="flex:none" onclick="scanFor(c=>{$('f_bc').value=c;fillFromBarcode(c)})">${ico('scan')}Scan</button></div></div>
+    <div class="field"><label>Product name</label><input type="text" id="f_name" placeholder="e.g. Lucky Me Pancit Canton" value="${esc(p?p.name:'')}"></div>
+    <div class="field"><label>Sold by</label><div class="seg" id="f_unit">
+      <button data-u="pc" onclick="setUnit('pc')">Per piece</button><button data-u="pack" onclick="setUnit('pack')">Per pack</button><button data-u="kg" onclick="setUnit('kg')">Per weight (kg)</button></div></div>
+    <div class="row"><div class="field"><label id="l_cost">Cost</label><input type="number" id="f_cost" inputmode="decimal" step="any" min="0" value="${p?p.cost:''}" oninput="calcMargin()"></div>
+      <div class="field"><label id="l_price">Price</label><input type="number" id="f_price" inputmode="decimal" step="any" min="0" value="${p?p.price:''}" oninput="calcMargin()"></div></div>
+    <div class="muted" id="margin" style="margin:-4px 0 14px;font-weight:600"></div>
+    <div class="field"><label id="l_stock">Stock on hand (optional)</label><input type="number" id="f_stock" inputmode="decimal" step="any" min="0" placeholder="Leave blank if you don't track stock" value="${p&&tracked(p)?p.stock:''}"></div>
+    <div class="field"><label>Picture (optional)</label><div class="photo"><div class="thumb" id="f_pic"></div>
+      <div class="btns"><label class="btn sm" style="margin:0;color:var(--ink)">Choose / take photo<input type="file" accept="image/*" hidden onchange="pickPhoto(this)"></label><button class="btn sm" onclick="form.img='';drawPic()">Remove</button></div></div></div>
+    <div class="err" id="f_err"></div>
+    <div class="actions"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary big" onclick="saveProduct()">Save</button></div>`);
+  setUnit(form.unit);drawPic();
+}
+function setUnit(u){
+  form.unit=u;
+  document.querySelectorAll('#f_unit button').forEach(b=>b.classList.toggle('on',b.dataset.u===u));
+  const n=unitName(u);
+  $('l_cost').textContent=`Cost (you bought it) per ${n}`;$('l_price').textContent=`Selling price per ${n}`;$('l_stock').textContent=`Stock on hand in ${u==='kg'?'kg':u+'s'} (optional)`;
+  calcMargin();
+}
+function calcMargin(){const c=parseFloat($('f_cost').value),p=parseFloat($('f_price').value);$('margin').innerHTML=(isNaN(c)||isNaN(p))?'':(p>=c?`Profit per ${unitName(form.unit)}: <span class="pos">${money(p-c)}</span>`:`<span class="neg">Price is lower than cost</span>`)}
+function drawPic(){const t=$('f_pic');if(form.img){t.style.cssText='';t.innerHTML=`<img src="${form.img}" alt="">`}else{t.style.cssText='';t.textContent='No photo'}}
+function pickPhoto(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{const im=new Image();im.onload=()=>{const m=320,s=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);form.img=c.toDataURL('image/jpeg',.78);drawPic()};im.src=r.result};
+  r.readAsDataURL(f);
+}
+function fillFromBarcode(c){const ex=db.products.find(p=>p.barcode===c&&p.id!==form.id);if(ex)toast('Already registered as "'+ex.name+'"')}
+function saveProduct(){
+  const name=$('f_name').value.trim(),cost=parseFloat($('f_cost').value),price=parseFloat($('f_price').value),bc=$('f_bc').value.trim(),st=$('f_stock').value.trim();
+  const err=m=>$('f_err').textContent=m;
+  if(!name)return err('Please enter the product name.');
+  if(isNaN(cost)||cost<0)return err('Please enter the cost.');
+  if(isNaN(price)||price<=0)return err('Please enter the selling price.');
+  if(bc&&db.products.some(p=>p.barcode===bc&&p.id!==form.id))return err('That barcode is already used by another product.');
+  const o={name,barcode:bc,cost,price,unit:form.unit,stock:st===''?'':parseFloat(st),img:form.img};
+  if(form.id)Object.assign(prod(form.id),o);else db.products.push({id:'p'+(db.seq.p++),...o});
+  save();closeModal();toast('Product saved');if(tab==='products')products();
+}
+
+/* ---------- history ---------- */
+function history(){
+  const t0=day0(),a=hf==='today'?t0:hf==='week'?t0-6*DAY:0;
+  const S=db.sales.filter(s=>s.t>=a),P=db.payments.filter(p=>p.t>=a);
+  const rows=[...S.map(s=>({t:s.t,s})),...P.map(p=>({t:p.t,p}))].sort((x,y)=>y.t-x.t);
+  const tot=S.reduce((s,x)=>s+x.total,0),pr=S.reduce((s,x)=>s+x.profit,0);
+  const when=t=>new Date(t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  $('view').innerHTML=`
+  <div class="head"><div><h1>Sales History</h1><p>${S.length} sales · ${money(tot)} total · <b class="pos">${money(pr)} profit</b></p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" onclick="go('report')">\ud83d\udcca Month-End Report</button><div class="seg" style="min-width:260px">${[['today','Today'],['week','7 days'],['all','All']].map(([k,l])=>`<button class="${hf===k?'on':''}" onclick="hf='${k}';history()">${l}</button>`).join('')}</div></div></div>
+  <div class="card">${rows.length?rows.slice(0,150).map(r=>r.s?`<div class="list-row"><span><b>${when(r.t)}</b> ${mpill(mth(r.s))}${mth(r.s)==='utang'?` <small class="muted">${esc(cname(r.s.cid))}</small>`:''}<br><small class="muted">${r.s.items.map(i=>esc(i.name)+' ×'+(i.unit==='kg'?fq(i.qty,'kg'):i.qty)).join(', ')}</small></span>
+    <span style="text-align:right;white-space:nowrap"><b>${money(r.s.total)}</b><br><small class="pos">+${money(r.s.profit)}</small></span></div>`
+    :`<div class="list-row"><span><b>${when(r.t)}</b> ${mpill(r.p.method)}<br><small class="muted">Utang payment · ${esc(cname(r.p.cid))}</small></span><span style="text-align:right;white-space:nowrap"><b>${money(r.p.amount)}</b><br><small class="muted">collected</small></span></div>`).join(''):'<div class="empty">No sales in this period.</div>'}</div>`;
+}
+
+/* ---------- month-end report ---------- */
+const ymNow=()=>dstr(Date.now()).slice(0,7);
+let rmonth=ymNow();
+function ymPrev(ym){const [y,m]=ym.split('-').map(Number),d=new Date(y,m-2,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function monthBounds(ym){const [y,m]=ym.split('-').map(Number);return [new Date(y,m-1,1).getTime(),new Date(y,m,1).getTime()]}
+function balAsOf(cid,T){
+  const c=db.customers.find(x=>x.id===cid)||{};
+  return +((c.opening||0)+db.sales.filter(x=>x.method==='utang'&&x.cid===cid&&x.t<T).reduce((a,x)=>a+x.total,0)-db.payments.filter(x=>x.cid===cid&&x.t<T).reduce((a,x)=>a+x.amount,0)).toFixed(2);
+}
+function reportData(ym){
+  const [a,b]=monthBounds(ym),[pa]=monthBounds(ymPrev(ym)),[y,m]=ym.split('-').map(Number);
+  const S=db.sales.filter(x=>x.t>=a&&x.t<b),P=db.payments.filter(x=>x.t>=a&&x.t<b),by=k=>S.filter(x=>mth(x)===k);
+  const tally={};S.forEach(x=>x.items.forEach(i=>{const o=tally[i.name]||(tally[i.name]={name:i.name,unit:i.unit,q:0,p:0});o.q+=i.qty;o.p+=i.qty*(i.price-i.cost)}));
+  const dim=new Date(y,m,0).getDate(),days=[];
+  for(let d=1;d<=dim;d++){
+    const s0=new Date(y,m-1,d).getTime(),e0=new Date(y,m-1,d+1).getTime();
+    days.push({v:sumBy(S.filter(x=>x.t>=s0&&x.t<e0),x=>x.profit),today:s0===day0(),label:(d===1||d%5===0)?String(d):'',full:new Date(s0).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})});
+  }
+  const owedList=db.customers.map(c=>({name:c.name,b:balAsOf(c.id,b)})).filter(c=>c.b>0).sort((x,y2)=>y2.b-x.b);
+  const closes=db.closes.filter(c=>c.date>=a&&c.date<b),saleDays=new Set(S.map(x=>dstr(x.t))).size;
+  const tot=sumBy(S,x=>x.total),prof=sumBy(S,x=>x.profit),prevProf=sumBy(db.sales.filter(x=>x.t>=pa&&x.t<a),x=>x.profit);
+  return {ym,a,b,label:new Date(a).toLocaleDateString('en-US',{month:'long',year:'numeric'}),S,n:S.length,tot,prof,prevProf,margin:tot?prof/tot*100:0,
+    items:S.reduce((s,x)=>s+x.items.reduce((q,i)=>q+(i.unit==='kg'?1:i.qty),0),0),
+    cash:sumBy(by('cash'),x=>x.total),gcash:sumBy(by('gcash'),x=>x.total),utang:sumBy(by('utang'),x=>x.total),
+    cashIn:sumBy(P.filter(x=>x.method==='cash'),x=>x.amount),gcashIn:sumBy(P.filter(x=>x.method==='gcash'),x=>x.amount),
+    owedList,owed:sumBy(owedList,x=>x.b),top:Object.values(tally).sort((x,y2)=>y2.p-x.p).slice(0,8),days,
+    counted:closes.length,saleDays,cashNet:sumBy(closes,c=>c.cashDiff||0),gcashNet:sumBy(closes,c=>c.gcashDiff||0),closes};
+}
+function deltaTxt(d){return d.prevProf>0?`${d.prof>=d.prevProf?'▲':'▼'} ${Math.abs((d.prof-d.prevProf)/d.prevProf*100).toFixed(0)}% vs last month`:'No data for last month'}
+function signed(n){return (n>0?'+':n<0?'−':'')+money(Math.abs(n))}
+function summaryText(d){
+  const L=[`${db.settings.store||'Your store'} — ${d.label}`,'',
+   `Total sales: ${money(d.tot)}`,`Clean earnings: ${money(d.prof)} (${d.margin.toFixed(0)}% margin)`,deltaTxt(d),`Customers served: ${d.n}`,'',
+   'Payments received',`  Cash:  ${money(d.cash)}`,`  GCash: ${money(d.gcash)}`,`  Utang: ${money(d.utang)} (not yet collected)`,'',
+   'Utang',`  Collected this month: ${money(d.cashIn+d.gcashIn)} (cash ${money(d.cashIn)}, GCash ${money(d.gcashIn)})`,`  Still owed at month end: ${money(d.owed)} from ${d.owedList.length} customer${d.owedList.length===1?'':'s'}`];
+  d.owedList.slice(0,5).forEach(c=>L.push(`    - ${c.name}: ${money(c.b)}`));
+  L.push('','Best sellers (by profit)');
+  d.top.slice(0,5).forEach((t,i)=>L.push(`  ${i+1}. ${t.name} — ${fq(+t.q.toFixed(3),t.unit)} — ${money(t.p)}`));
+  if(!d.top.length)L.push('  (no sales)');
+  L.push('','Daily cash count',`  Counted ${d.counted} of ${d.saleDays} selling days`,`  Cash difference total: ${signed(d.cashNet)}`,`  GCash difference total: ${signed(d.gcashNet)}`);
+  return L.join('\n');
+}
+const rowsOf=sales=>sales.slice().sort((a,b)=>a.t-b.t).map(x=>({Date:dstr(x.t),Time:new Date(x.t).toTimeString().slice(0,5),Method:MLABEL[mth(x)],Customer:mth(x)==='utang'?cname(x.cid):'',
+  Items:x.items.map(i=>i.name+' x'+(i.unit==='kg'?fq(i.qty,'kg'):i.qty)).join('; '),Total:x.total,Profit:+x.profit.toFixed(2),Paid:x.paid,Change:x.change,Ref:x.ref||''}));
+function toCSV(rows){
+  if(!rows.length)return '';
+  const cols=Object.keys(rows[0]),q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  return '﻿'+[cols.map(q).join(','),...rows.map(r=>cols.map(c=>q(r[c])).join(','))].join('\r\n');
+}
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type||'text/csv'}));a.download=name;a.click()}
+function report(){
+  const d=reportData(rmonth),split=[['Cash',d.cash,'var(--brand)'],['GCash',d.gcash,'var(--blue)'],['Utang',d.utang,'var(--amber)']];
+  $('view').innerHTML=`
+  <div class="head"><div><h1>Month-End Report</h1><p>${esc(db.settings.store||'')} · ${d.label}</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input type="month" id="r_m" value="${rmonth}" max="${ymNow()}" style="width:auto" onchange="rmonth=this.value||rmonth;report()">
+      <button class="btn" onclick="openEmail()">✉ Email preview</button><button class="btn" onclick="exportMonth()">⬇ CSV for Google Sheets</button><button class="btn primary" onclick="sendReport()">Send report</button></div></div>
+  <div class="hero h3">
+    <div class="card stat main"><small>CLEAN EARNINGS</small><div class="n">${money(d.prof)}</div><div class="delta">${deltaTxt(d)}</div></div>
+    <div class="card stat"><small>Total sales</small><div class="n">${money(d.tot)}</div><div class="sub">${d.margin.toFixed(0)}% margin</div></div>
+    <div class="card stat"><small>Customers served</small><div class="n">${d.n}</div><div class="sub">${d.items} items sold</div></div>
+  </div>
+  <div class="card chart" style="margin-bottom:16px"><h3 style="margin-bottom:12px;font-size:16px">Clean earnings per day</h3>${chartSVG(d.days)}</div>
+  <div class="cols2">
+    <div class="card"><h3>Payments received</h3>${split.map(([l,v,c])=>`<div class="split"><div class="top"><span>${l}</span><span>${money(v)}</span></div><div class="bar"><i style="width:${d.tot?(v/d.tot*100).toFixed(1):0}%;background:${c}"></i></div></div>`).join('')}</div>
+    <div class="card"><h3>Utang</h3>
+      <div class="krow"><span>Given this month</span><b>${money(d.utang)}</b></div>
+      <div class="krow"><span>Collected this month<small>Cash ${money(d.cashIn)} · GCash ${money(d.gcashIn)}</small></span><b class="pos">${money(d.cashIn+d.gcashIn)}</b></div>
+      <div class="krow t"><span>Still owed at month end</span><span class="${d.owed>0?'neg':''}">${money(d.owed)}</span></div>
+      ${d.owedList.slice(0,4).map(c=>`<div class="krow"><span class="muted">${esc(c.name)}</span><span>${money(c.b)}</span></div>`).join('')}</div>
+  </div>
+  <div class="cols2">
+    <div class="card"><h3>Best sellers (by profit)</h3>${d.top.length?d.top.map((t,i)=>`<div class="list-row"><span>${i+1}. ${esc(t.name)}<br><small class="muted">${fq(+t.q.toFixed(3),t.unit)} sold</small></span><b class="pos">+${money(t.p)}</b></div>`).join(''):'<div class="muted">No sales this month.</div>'}</div>
+    <div class="card"><h3>Daily cash count check</h3>
+      <div class="krow"><span>Days counted</span><b>${d.counted} of ${d.saleDays}</b></div>
+      <div class="krow"><span>Cash difference (total)</span><b class="${d.cashNet<0?'neg':d.cashNet>0?'':'pos'}">${signed(d.cashNet)}</b></div>
+      <div class="krow"><span>GCash difference (total)</span><b class="${d.gcashNet<0?'neg':d.gcashNet>0?'':'pos'}">${signed(d.gcashNet)}</b></div>
+      <div class="muted" style="font-size:13px;margin-top:8px">${d.counted<d.saleDays?'Tip: save the Daily Cash Count every day so this report can spot missing money early.':'Nice — every selling day was counted.'}</div></div>
+  </div>`;
+}
+function openEmail(){
+  const d=reportData(rmonth),subj=`${db.settings.store||'Your store'} — ${d.label} sales summary`;
+  openModal(`<h2>Email preview</h2><div class="sub">The owner gets this automatically on the 1st of each month.</div>
+    <div class="field"><label>To</label><input type="text" readonly value="${esc(db.settings.ownerEmail||'')}" placeholder="Set the owner email in Settings"></div>
+    <div class="field"><label>Subject</label><input type="text" readonly value="${esc(subj)}"></div>
+    <pre class="mail">${esc(summaryText(d))}</pre>
+    <div class="actions"><button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="copySummary()">Copy</button><button class="btn primary" onclick="sendReport()">Send report</button></div>`);
+  $('modal').classList.add('wide');
+}
+function copySummary(){const t=summaryText(reportData(rmonth));(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Summary copied'),()=>toast('Could not copy — select the text instead'))}
+function exportMonth(){const d=reportData(rmonth);if(!d.S.length){toast('No sales in '+d.label);return}download(`sales-${d.ym}.csv`,toCSV(rowsOf(d.S)));toast('CSV downloaded — import it into Google Sheets')}
+async function sendReport(){
+  const s=db.settings,d=reportData(rmonth);
+  if(!s.ownerEmail&&!s.webhook){toast('Add the owner email and webhook in Settings first');return}
+  if(!s.webhook){toast('Draft only: the real app will send this through your n8n webhook. Add a webhook URL in Settings to test.');return}
+  const payload={type:'monthly_report',store:s.store,month:d.ym,to:s.ownerEmail||'',sheet:s.sheetUrl||'',subject:`${s.store||'Your store'} — ${d.label} sales summary`,text:summaryText(d),
+    summary:{total:d.tot,profit:d.prof,customers:d.n,cash:d.cash,gcash:d.gcash,utang:d.utang,owed:d.owed},rows:rowsOf(d.S)};
+  try{await fetch(s.webhook,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});closeModal();toast('Sent to your webhook — check n8n')}
+  catch(e){toast('Could not reach the webhook. The real app will retry when online.')}
+}
+
+/* ---------- archive ---------- */
+function reportsCard(){
+  const s=db.settings,bytes=new Blob([JSON.stringify(db)]).size,pct=Math.min(100,bytes/5e6*100),keep=s.keep||3;
+  const oldest=db.sales.length?new Date(Math.min(...db.sales.map(x=>x.t))).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+  const seg=(k,opts,cur)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${cur===v?'on':''}" onclick="setSet('${k}',${v});settings()">${l}</button>`).join('')}</div>`;
+  return `<div class="card set-grp" style="max-width:640px"><h3>Monthly report &amp; archive</h3>
+    <div class="field"><label>Owner email (gets the monthly summary)</label><input type="text" inputmode="email" value="${esc(s.ownerEmail||'')}" placeholder="owner@email.com" onchange="setSet('ownerEmail',this.value.trim())"></div>
+    <div class="field"><label>Google Sheet link (archive)</label><input type="text" value="${esc(s.sheetUrl||'')}" placeholder="https://docs.google.com/spreadsheets/…" onchange="setSet('sheetUrl',this.value.trim())"></div>
+    <div class="field"><label>Automation webhook URL (n8n)</label><input type="text" value="${esc(s.webhook||'')}" placeholder="https://your-n8n/webhook/…" onchange="setSet('webhook',this.value.trim())"></div>
+    <div class="row"><div class="field"><label>Send automatically on the 1st</label>${seg('auto',[['true','On'],['false','Off']],s.auto?'true':'false').replace(/true/g,'true')}</div>
+      <div class="field"><label>Keep details on device</label>${seg('keep',[[2,'2 mo'],[3,'3 mo'],[6,'6 mo']],keep)}</div></div>
+    <div class="field"><label>Data on this device</label><div class="meter"><i style="width:${pct.toFixed(1)}%"></i></div>
+      <div class="muted" style="font-size:13px">${(bytes/1024).toFixed(0)} KB of ~5,000 KB (this draft) · ${db.sales.length} sales · oldest ${oldest}</div></div>
+    <div class="set-btns"><button class="btn" onclick="go('report')">📊 Open Month-End Report</button><button class="btn" onclick="archiveOld()">🗄 Archive old records</button></div>
+    <p class="muted" style="font-size:13px;margin-bottom:0">In this draft nothing is sent on its own — use <b>Send report</b> in the report screen. The real app will do it on the 1st when online, then clear details older than the months above. Customers and utang balances are always kept.</p></div>`;
+}
+function archiveOld(){
+  const keep=db.settings.keep||3,c=new Date();c.setMonth(c.getMonth()-keep,1);c.setHours(0,0,0,0);const cut=c.getTime();
+  const oS=db.sales.filter(x=>x.t<cut),oP=db.payments.filter(x=>x.t<cut);
+  if(!oS.length&&!oP.length){toast(`Nothing older than ${keep} months to archive`);return}
+  if(oS.length)download(`archive-before-${dstr(cut)}.csv`,toCSV(rowsOf(oS)));
+  if(!confirm(`A CSV of ${oS.length} old sales was downloaded. Save it or send it to your Google Sheet first.\n\nRemove ${oS.length} sales and ${oP.length} payments before ${new Date(cut).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} from this device? Utang balances are kept.`))return;
+  db.customers.forEach(cu=>{
+    cu.opening=+((cu.opening||0)+oS.filter(x=>x.method==='utang'&&x.cid===cu.id).reduce((a,x)=>a+x.total,0)-oP.filter(x=>x.cid===cu.id).reduce((a,x)=>a+x.amount,0)).toFixed(2);
+    if(cu.opening<=0)delete cu.opening;
+  });
+  db.sales=db.sales.filter(x=>x.t>=cut);db.payments=db.payments.filter(x=>x.t>=cut);save();toast('Old records archived');settings();
+}
+
+/* ---------- settings ---------- */
+function settings(){
+  const s=db.settings;
+  $('view').innerHTML=`
+  <div class="head"><div><h1>Settings</h1><p>Make the app yours.</p></div></div>
+  <div class="card set-grp" style="max-width:640px"><h3>Store</h3>
+    <div class="field"><label>Store name</label><input type="text" id="s_store" value="${esc(s.store)}" onchange="setSet('store',this.value)"></div>
+    <div class="row"><div class="field"><label>Currency symbol</label><input type="text" id="s_cur" value="${esc(s.cur)}" maxlength="3" onchange="setSet('cur',this.value||'₱')"></div>
+    <div class="field"><label>Low-stock warning at or below</label><input type="number" id="s_low" min="0" value="${s.low}" onchange="setSet('low',parseFloat(this.value)||0)"></div></div>
+    <div class="field" style="margin:0"><label>Appearance</label><div class="seg">${[['auto','Auto'],['light','Light'],['dark','Dark']].map(([k,l])=>`<button class="${s.theme===k?'on':''}" onclick="setSet('theme','${k}');settings()">${l}</button>`).join('')}</div></div></div>
+  ${reportsCard()}
+  <div class="card set-grp" style="max-width:640px"><h3>Backup &amp; data</h3>
+    <p class="muted" style="margin-top:-6px">Your products and sales are saved on this device. Download a backup now and then.</p>
+    <div class="set-btns"><button class="btn" onclick="exportData()">⬇ Download backup</button><button class="btn" onclick="$('importFile').click()">⬆ Restore backup</button>
+    <button class="btn" onclick="resetDemo()">Reload sample data</button><button class="btn danger" onclick="wipe()">Erase everything</button></div></div>
+  <div class="card" style="max-width:640px"><h3 style="margin-bottom:8px">Ideas for the real app</h3>
+    <div class="muted">Low-stock restock list · Receipt printing or sharing · Multiple cashiers with PIN · Load (e-load) and bills payment shortcuts.</div></div>`;
+}
+function setSet(k,v){db.settings[k]=v;save();if(k==='theme')applyTheme();renderNav()}
+function exportData(){const b=new Blob([JSON.stringify(db)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tindahan-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('Backup downloaded')}
+$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.products||!d.sales||!d.settings)throw 0;db=ensure(d);save();applyTheme();toast('Backup restored');go('dashboard')}catch(x){toast('That file is not a valid backup')}};r.readAsText(f);e.target.value=''};
+function resetDemo(){if(confirm('Replace everything with fresh sample data?')){db=seed();save();cart=[];applyTheme();toast('Sample data loaded');go('dashboard')}}
+function wipe(){if(confirm('Erase ALL products and sales? This cannot be undone.')){db=ensure({settings:db.settings,products:[],sales:[],customers:[],payments:[],closes:[],seq:{p:1,s:1,c:1,y:1}});save();cart=[];toast('Everything erased');go('dashboard')}}
+
+/* ---------- modal ---------- */
+function openModal(h){$('modal').classList.remove('wide');$('modal').innerHTML=h;$('scrim').classList.add('on')}
+function closeModal(){$('scrim').classList.remove('on');$('modal').innerHTML=''}
+$('scrim').addEventListener('mousedown',e=>{if(e.target===$('scrim'))closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('scan').classList.contains('on'))stopScan();else closeModal()}});
+
+/* ---------- barcode scanner (camera) ---------- */
+let stream=null,scanTimer=null,scanCb=null;
+async function scanFor(cb){
+  scanCb=cb;
+  if(!('BarcodeDetector' in window)||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    toast('Camera scan isn\'t supported in this browser. Type the barcode instead (the real app will use the phone camera).');return;
+  }
+  try{
+    const det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39']});
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    const v=$('vid');v.srcObject=stream;await v.play();$('scan').classList.add('on');$('scanMsg').textContent='Point the camera at the barcode';
+    scanTimer=setInterval(async()=>{try{const r=await det.detect(v);if(r.length){const c=r[0].rawValue;stopScan();scanCb&&scanCb(c)}}catch(e){}},250);
+  }catch(e){stopScan();toast('Could not open the camera. Please allow camera permission.')}
+}
+function stopScan(){clearInterval(scanTimer);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('vid').srcObject=null;$('scan').classList.remove('on')}
+
+/* ---------- start ---------- */
+applyTheme();go('dashboard');
+</script>
+</body>
+</html>
